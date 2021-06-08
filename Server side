@@ -1,0 +1,38 @@
+import numpy as np
+import socket as s
+import cv2
+import pickle
+import struct
+
+
+#making socket using by using tcp protocol and using IP Address as address identification
+myp =  s.SOCK_STREAM
+afn = s.AF_INET
+add_pro = s.socket(afn , myp)
+
+
+#Binding IP Address and Port No 
+myip = "192.168.43.198"  #server ip
+port = 1234              #server port
+bind = add_pro.bind((myip , port))        #Binding ip and port
+add_pro.listen()       #Starting Listen means start connection
+
+
+
+while True:
+    c , addr = add_pro.accept() 
+    if c:
+        cv = cv2.VideoCapture(0)  
+        while(cv.isOpened()):
+            ret , photo = cv.read()
+            a = pickle.dumps(photo)
+            message = struct.pack("Q",len(a))+a
+            c.sendall(message)
+            cv2.imshow("Server Side" ,photo)
+            key = cv2.waitKey(1) & 0xFF
+            if cv2.waitKey(1) == 13:
+                cv2.destroyAllWindows()
+                c.close()
+                break
+cv.release()
+
