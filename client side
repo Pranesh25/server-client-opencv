@@ -1,0 +1,44 @@
+import socket ,cv2,pickle,struct
+
+
+
+#making socket using by using tcp protocol and using IP Address as address identification
+myp =  socket.SOCK_STREAM
+afn = socket.AF_INET
+add_pro = socket.socket(afn , myp)
+
+
+
+#Binding IP Address and Port No 
+myip = "192.168.43.198"  #server ip
+port = 1234              #server port
+add_pro.connect((myip,port))
+
+
+
+data = b""
+payload_size = struct.calcsize("Q")
+
+
+
+while True:
+    while len(data) < payload_size:
+        packet = add_pro.recv(4*1024) # 4K
+        if not packet: break
+        data+=packet
+    packed_msg_size = data[:payload_size]
+    data = data[payload_size:]
+    msg_size = struct.unpack("Q",packed_msg_size)[0]
+    
+    while len(data) < msg_size:
+        data += add_pro.recv(4*1024)
+    frame_data = data[:msg_size]
+    data  = data[msg_size:]
+    frame = pickle.loads(frame_data)
+    cv2.imshow("Client Side",frame)
+    if cv2.waitKey(1) == 13:
+        cv2.destroyAllWindows()
+        break
+
+add_pro.close()
+
